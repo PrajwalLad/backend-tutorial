@@ -1,7 +1,7 @@
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { User } from "../models/user.model.js"
-import { uploadOnCloudinary } from "../utils/cloudinary.js";
+import { deleteFromCloudinary, uploadOnCloudinary } from "../utils/cloudinary.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import jwt from "jsonwebtoken"
 
@@ -278,6 +278,9 @@ const updateAccountDetails = asyncHandler(async(req, res)=>{
 })
 
 const updateUserAvatar = asyncHandler(async(req, res)=>{
+
+    const oldAvatar = req.user?.avatar;
+
     const avatarLocalPath = req.file?.path
 
     if(!avatarLocalPath){
@@ -302,6 +305,8 @@ const updateUserAvatar = asyncHandler(async(req, res)=>{
         }
     ).select("-password")
 
+    await deleteFromCloudinary(oldAvatar);
+
     return res
     .status(200)
     .json(
@@ -310,6 +315,8 @@ const updateUserAvatar = asyncHandler(async(req, res)=>{
 })
 
 const updateUserCoverImage = asyncHandler(async(req, res)=>{
+    const oldCoverImage = req.user?.coverImage
+
     const coverImageLocalPath = req.file?.path
 
     if(!coverImageLocalPath){
@@ -333,6 +340,10 @@ const updateUserCoverImage = asyncHandler(async(req, res)=>{
             new: true
         }
     ).select("-password")
+
+    if(oldCoverImage){
+        await deleteFromCloudinary(oldCoverImage);
+    }
 
     return res
     .status(200)
